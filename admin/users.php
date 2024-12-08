@@ -3,6 +3,14 @@
 ?>
 
 <div class="container-fluid">
+
+<!-- !PAGE CONTENT! -->
+<div class="w3-main" style="margin-left:300px;margin-top:43px;">
+
+<!-- Header -->
+<header class="w3-container" style="padding-top:22px">
+  <h5><b><i class="fa fa-dashboard"></i> USERS</b></h5>
+</header>
 	
 	<div class="row">
 	<div class="col-lg-12">

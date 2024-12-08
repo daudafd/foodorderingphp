@@ -156,35 +156,40 @@
 	        reader.readAsDataURL(input.files[0]);
 	    }
 	}
-	$('#manage-menu').submit(function(e){
-		e.preventDefault()
-		start_load()
-		$.ajax({
-			url:'ajax.php?action=save_menu',
-			data: new FormData($(this)[0]),
-		    cache: false,
-		    contentType: false,
-		    processData: false,
-		    method: 'POST',
-		    type: 'POST',
-			success:function(resp){
-				if(resp==1){
-					alert_toast("Data successfully added",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
+	$('#manage-menu').submit(function(e) {
+    e.preventDefault(); // Prevent the form from submitting normally
+    start_load(); // Show loading spinner or indicator if you have one
+    $.ajax({
+        url: 'ajax.php?action=save_menu', // Endpoint to handle form submission
+        data: new FormData($(this)[0]), // Serialize form data
+        cache: false,
+        contentType: false,
+        processData: false,
+        method: 'POST', // HTTP method
+        type: 'POST', // Fallback method
+        success: function(resp) {
+            try {
+                let response = JSON.parse(resp); // Parse JSON response
+                if (response.success) {
+                    alert_toast("Data successfully added", 'success'); // Show success toast
+                    setTimeout(function() {
+                        location.reload(); // Reload the page after 1.5 seconds
+                    }, 500);
+                } else if (response.error) {
+                    alert_toast(response.error, 'danger'); // Show error toast if provided
+                }
+            } catch (e) {
+                alert_toast("Unexpected error occurred. Please try again.", 'danger'); // Catch unexpected errors
+            }
+            end_load(); // Hide loading spinner or indicator
+        },
+        error: function() {
+            alert_toast("An error occurred while saving the menu. Please try again.", 'danger'); // Handle AJAX errors
+            end_load(); // Hide loading spinner
+        }
+    });
+});
 
-				}
-				else if(resp==2){
-					alert_toast("Data successfully updated",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
-
-				}
-			}
-		})
-	})
 	$('.edit_menu').click(function(){
 		start_load()
 		var cat = $('#manage-menu')
@@ -201,24 +206,33 @@
 		cat.find("#cimg").attr('src','../assets/img/'+$(this).attr('data-img_path'))
 		end_load()
 	})
+
 	$('.delete_menu').click(function(){
 		_conf("Are you sure to delete this menu?","delete_menu",[$(this).attr('data-id')])
 	})
-	function delete_menu($id){
-		start_load()
-		$.ajax({
-			url:'ajax.php?action=delete_menu',
-			method:'POST',
-			data:{id:$id},
-			success:function(resp){
-				if(resp==1){
-					alert_toast("Data successfully deleted",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
 
-				}
-			}
-		})
-	}
+	function delete_menu($id){
+    start_load(); // Start loading animation
+    $.ajax({
+        url: 'ajax.php?action=delete_menu',
+        method: 'POST',
+        data: {id: $id},
+        dataType: 'json', // Ensure the response is treated as JSON
+        success: function(resp){
+            console.log(resp); // Log the response for debugging
+            if(resp.success == "Menu deleted successfully") {
+                alert_toast("Data successfully deleted", 'success'); // Show success toast
+                setTimeout(function(){
+                    location.reload(); // Force reload after a delay
+                }, 100); // Adjust the delay if needed
+            } else {
+                alert_toast("Failed to delete data", 'error'); // In case of failure
+            }
+        },
+        error: function() {
+            alert_toast("An error occurred. Please try again.", 'error');
+        }
+    });
+}
+
 </script>

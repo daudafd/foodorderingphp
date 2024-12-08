@@ -61,15 +61,32 @@ Class Action {
 	
 			// Verify the provided password against the stored hash
 			if (password_verify($password, $user['password'])) {
+				// Set session variables for the user
 				foreach ($user as $key => $value) {
 					if ($key != 'password' && !is_numeric($key)) {
 						$_SESSION['login_' . $key] = $value;
 					}
 				}
-				// Fetch additional fields if needed (e.g., address, mobile)
+				// Set additional fields if available
 				$_SESSION['address'] = $user['address'] ?? '';
 				$_SESSION['mobile'] = $user['mobile'] ?? '';
-
+	
+				// Check if there are items in the session's cart and move them to the user's cart
+				if (isset($_SESSION['cart_items']) && !empty($_SESSION['cart_items'])) {
+					foreach ($_SESSION['cart_items'] as $item) {
+						// Insert cart items from session into the database under the logged-in user's cart
+						$product_id = $item['product_id'];
+						$qty = $item['qty'];
+						$user_id = $_SESSION['login_user_id'];
+	
+						// Insert into the cart table (assuming a cart table exists with columns for user ID, product ID, and quantity)
+						$this->db->query("INSERT INTO cart (product_id, qty, user_id) 
+										  VALUES ('$product_id', '$qty', '$user_id')");
+					}
+					// Clear the session's cart after transferring the items to the database
+					unset($_SESSION['cart_items']);
+				}
+	
 				return 1; // Login successful
 			} else {
 				return 3; // Incorrect password
@@ -77,7 +94,8 @@ Class Action {
 		} else {
 			return 3; // User not found
 		}
-	}	
+	}
+		
 	
 	
 	// Helper function to get the client's IP address
@@ -205,49 +223,62 @@ Class Action {
 		$data .= ", email = '$email' ";
 		$data .= ", contact = '$contact' ";
 		$data .= ", about_content = '".htmlentities(str_replace("'","&#x2019;",$about))."' ";
-		if($_FILES['img']['tmp_name'] != ''){
-						$fname = strtotime(date('y-m-d H:i')).'_'.$_FILES['img']['name'];
-						$move = move_uploaded_file($_FILES['img']['tmp_name'],'../assets/img/'. $fname);
-					$data .= ", cover_img = '$fname' ";
-
+		if ($_FILES['img']['tmp_name'] != '') {
+			$fname = strtotime(date('y-m-d H:i')).'_'.$_FILES['img']['name'];
+			$move = move_uploaded_file($_FILES['img']['tmp_name'], '../assets/img/'. $fname);
+			$data .= ", cover_img = '$fname' ";
 		}
 		
-		// echo "INSERT INTO system_settings set ".$data;
 		$chk = $this->db->query("SELECT * FROM system_settings");
-		if($chk->num_rows > 0){
-			$save = $this->db->query("UPDATE system_settings set ".$data." where id =".$chk->fetch_array()['id']);
-		}else{
-			$save = $this->db->query("INSERT INTO system_settings set ".$data);
+		if ($chk->num_rows > 0) {
+			$save = $this->db->query("UPDATE system_settings SET ".$data." WHERE id =".$chk->fetch_array()['id']);
+		} else {
+			$save = $this->db->query("INSERT INTO system_settings SET ".$data);
 		}
-		if($save){
-		$query = $this->db->query("SELECT * FROM system_settings limit 1")->fetch_array();
-		foreach ($query as $key => $value) {
-			if(!is_numeric($key))
-				$_SESSION['setting_'.$key] = $value;
-		}
-
-			return 1;
+	
+		if ($save) {
+			// Update session variables
+			$query = $this->db->query("SELECT * FROM system_settings LIMIT 1")->fetch_array();
+			foreach ($query as $key => $value) {
+				if (!is_numeric($key)) {
+					$_SESSION['setting_'.$key] = $value;
 				}
-	}
+			}
+			return 1;
+		}
+	}	
 
 	
 	function save_category(){
 		extract($_POST);
 		$data = " name = '$name' ";
 		if(empty($id)){
-			$save = $this->db->query("INSERT INTO category_list set ".$data);
-		}else{
-			$save = $this->db->query("UPDATE category_list set ".$data." where id=".$id);
+			$save = $this->db->query("INSERT INTO category_list SET ".$data);
+			if ($save) {
+				return json_encode(['success' => 'Category added successfully']);
+			} else {
+				return json_encode(['error' => 'Failed to add category']);
+			}
+		} else {
+			$save = $this->db->query("UPDATE category_list SET ".$data." WHERE id=".$id);
+			if ($save) {
+				return json_encode(['success' => 'Category updated successfully']);
+			} else {
+				return json_encode(['error' => 'Failed to update category']);
+			}
 		}
-		if($save)
-			return 1;
 	}
+	
 	function delete_category(){
 		extract($_POST);
-		$delete = $this->db->query("DELETE FROM category_list where id = ".$id);
-		if($delete)
-			return 1;
+		$delete = $this->db->query("DELETE FROM category_list WHERE id = ".$id);
+		if ($delete) {
+			return json_encode(['success' => 'Category deleted successfully']);
+		} else {
+			return json_encode(['error' => 'Failed to delete category']);
+		}
 	}
+	
 	
 	function save_menu(){
 		extract($_POST);
@@ -285,19 +316,43 @@ Class Action {
 	function add_to_cart(){
 		extract($_POST);
 		$data = " product_id = $pid ";	
-		$qty = isset($qty) ? $qty : 1 ;
+		$qty = isset($qty) ? $qty : 1;
 		$data .= ", qty = $qty ";	
+	
+		// Check if the user is logged in
 		if(isset($_SESSION['login_user_id'])){
 			$data .= ", user_id = '".$_SESSION['login_user_id']."' ";	
-		}else{
+	
+			// If the user is logged in, ensure any cart items from session (guest cart) are transferred
+			if(isset($_SESSION['cart_items'])) {
+				foreach ($_SESSION['cart_items'] as $item) {
+					// Transfer session cart items to the logged-in user's cart
+					$this->db->query("INSERT INTO cart (product_id, qty, user_id) 
+									  VALUES ('".$item['product_id']."', '".$item['qty']."', '".$_SESSION['login_user_id']."')");
+				}
+				// Clear the session cart after transfer
+				unset($_SESSION['cart_items']);
+			}
+		} else {
+			// If not logged in, use the client's IP address
 			$ip = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR']);
 			$data .= ", client_ip = '".$ip."' ";	
-
+	
+			// Save to session for guests if they aren't logged in
+			if (!isset($_SESSION['cart_items'])) {
+				$_SESSION['cart_items'] = [];
+			}
+			$_SESSION['cart_items'][] = [
+				'product_id' => $pid,
+				'qty' => $qty
+			];
 		}
+	
 		$save = $this->db->query("INSERT INTO cart set ".$data);
 		if($save)
 			return 1;
 	}
+	
 	
 	function get_cart_count(){
 		extract($_POST);

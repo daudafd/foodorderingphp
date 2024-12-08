@@ -18,6 +18,10 @@ html,body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
+<!-- jQuery Text Editor (jqte) -->
+    <link rel="stylesheet" href="https://cdn.rawgit.com/jqte/jqte/gh-pages/dist/jqte.css">
+    <script src="https://cdn.rawgit.com/jqte/jqte/gh-pages/dist/jquery.jqte.min.js"></script>
+
 </head>
 <body class="w3-light-grey">
 

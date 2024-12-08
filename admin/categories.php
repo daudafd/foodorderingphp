@@ -1,6 +1,14 @@
 <?php include('db_connect.php');?>
 
 <div class="container-fluid">
+
+<!-- !PAGE CONTENT! -->
+<div class="w3-main" style="margin-left:300px;margin-top:43px;">
+
+<!-- Header -->
+<header class="w3-container" style="padding-top:22px">
+  <h5><b><i class="fa fa-dashboard"></i> Menu Category</b></h5>
+</header>
 	
 	<div class="col-lg-12">
 		<div class="row">
@@ -81,60 +89,73 @@
 <script>
 	
 	$('#manage-category').submit(function(e){
-		e.preventDefault()
-		start_load()
-		$.ajax({
-			url:'ajax.php?action=save_category',
-			data: new FormData($(this)[0]),
-		    cache: false,
-		    contentType: false,
-		    processData: false,
-		    method: 'POST',
-		    type: 'POST',
-			success:function(resp){
-				if(resp==1){
-					alert_toast("Data successfully added",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
+    e.preventDefault();
+    start_load();
+    $.ajax({
+        url:'ajax.php?action=save_category',
+        data: new FormData($(this)[0]),
+        cache: false,
+        contentType: false,
+        processData: false,
+        method: 'POST',
+        success:function(resp){
+            // Parse the JSON response
+            var response = JSON.parse(resp);
 
-				}
-				else if(resp==2){
-					alert_toast("Data successfully updated",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
+            // Check if the response indicates success
+            if(response.success){
+                alert_toast(response.success, 'success');
+                setTimeout(function(){
+                    location.reload(); // Reload the page
+                }, 500);
+            }
+            else if(response.error){
+                alert_toast(response.error, 'error');
+            }
+        },
+        error:function(){
+            alert_toast("An error occurred, please try again", 'error');
+        }
+    });
+});
 
-				}
-			}
-		})
-	})
-	$('.edit_cat').click(function(){
-		start_load()
-		var cat = $('#manage-category')
-		cat.get(0).reset()
-		cat.find("[name='id']").val($(this).attr('data-id'))
-		cat.find("[name='name']").val($(this).attr('data-name'))
-		end_load()
-	})
-	$('.delete_cat').click(function(){
-		_conf("Are you sure to delete this category?","delete_cat",[$(this).attr('data-id')])
-	})
-	function delete_cat($id){
-		start_load()
-		$.ajax({
-			url:'ajax.php?action=delete_category',
-			method:'POST',
-			data:{id:$id},
-			success:function(resp){
-				if(resp==1){
-					alert_toast("Data successfully deleted",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
+$('.edit_cat').click(function(){
+    start_load();
+    var cat = $('#manage-category');
+    cat.get(0).reset(); // Reset form
+    cat.find("[name='id']").val($(this).attr('data-id'));
+    cat.find("[name='name']").val($(this).attr('data-name'));
+    end_load();
+});
 
-				}
-			}
-		})
-	}
+$('.delete_cat').click(function(){
+    _conf("Are you sure you want to delete this category?", "delete_cat", [$(this).attr('data-id')]);
+});
+
+function delete_cat(id){
+    start_load();
+    $.ajax({
+        url: 'ajax.php?action=delete_category',
+        method: 'POST',
+        data: {id: id},
+        success:function(resp){
+            // Parse the JSON response
+            var response = JSON.parse(resp);
+
+            if(response.success){
+                alert_toast(response.success, 'success');
+                setTimeout(function(){
+                    location.reload(); // Reload the page after deletion
+                }, 500);
+            }
+            else if(response.error){
+                alert_toast(response.error, 'error');
+            }
+        },
+        error:function(){
+            alert_toast("An error occurred, please try again", 'error');
+        }
+    });
+}
+
 </script>

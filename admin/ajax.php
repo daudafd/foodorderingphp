@@ -81,32 +81,23 @@ switch ($action) {
         }
         break;
 
-    case 'save_settings':
-        $save = $crud->save_settings();
-        if ($save) {
-            echo json_encode(['success' => 'Settings saved successfully']);
-        } else {
-            echo json_encode(['error' => 'Failed to save settings']);
-        }
-        break;
+        case 'save_settings':
+            $save = $crud->save_settings();
+            if ($save) {
+                echo json_encode(['success' => 'Settings saved successfully']);
+            } else {
+                echo json_encode(['error' => 'Failed to save settings']);
+            }
+            break;
+        
 
-    case 'save_category':
-        $save = $crud->save_category();
-        if ($save) {
-            echo json_encode(['success' => 'Category saved successfully']);
-        } else {
-            echo json_encode(['error' => 'Failed to save category']);
-        }
-        break;
-
-    case 'delete_category':
-        $save = $crud->delete_category();
-        if ($save) {
-            echo json_encode(['success' => 'Category deleted successfully']);
-        } else {
-            echo json_encode(['error' => 'Failed to delete category']);
-        }
-        break;
+        case 'save_category':
+            echo $crud->save_category(); // This will echo the JSON response from the save_category function
+            break;
+        
+        case 'delete_category':
+            echo $crud->delete_category(); // This will echo the JSON response from the delete_category function
+            break;
 
     case 'save_menu':
         $save = $crud->save_menu();
