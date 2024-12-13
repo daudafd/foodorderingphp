@@ -71,6 +71,17 @@ switch ($action) {
         }
         break;
 
+        case 'get_user':
+            if (isset($_GET['id'])) {
+                $user = $action->get_user($_GET['id']);
+                echo json_encode($user);
+            }
+            break;
+
+            case 'delete_category':
+                echo $crud->delete_category(); // This will echo the JSON response from the delete_category function
+                break;
+
     case 'signup':
         $save = $crud->signup();
         if ($save) {

@@ -21,6 +21,7 @@
 	<div class="row">
 		<div class="card col-lg-12">
 			<div class="card-body">
+			<div style="overflow-x:auto;">
 				<table class="table-striped table-bordered col-md-12">
 			<thead>
 				<tr>
@@ -33,7 +34,7 @@
 			<tbody>
 				<?php
  					include 'db_connect.php';
- 					$users = $conn->query("SELECT * FROM users order by name asc");
+ 					$users = $conn->query("SELECT * FROM users WHERE type = 2 order by name asc");
  					$i = 1;
  					while($row= $users->fetch_assoc()):
 				 ?>
@@ -68,8 +69,19 @@
 		</table>
 			</div>
 		</div>
+					</div>
 	</div>
-
+        <!-- Toast HTML -->
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    User saved successfully!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
 	
@@ -79,5 +91,42 @@ $('#new_user').click(function(){
 $('.edit_user').click(function(){
 	uni_modal('Edit User','manage_user.php?id='+$(this).attr('data-id'))
 })
+
+// Edit User
+$('.edit_user').click(function() {
+        const userId = $(this).data('id');
+        $.ajax({
+            url: 'ajax.php?action=get_user&id=' + userId,
+            method: 'GET',
+            dataType: 'json',
+            success: function(resp) {
+                if (resp) {
+                    // Populate the form with user data for editing
+                    $('#manage-menu [name="id"]').val(resp.id);
+                    $('#manage-menu [name="name"]').val(resp.name);
+                    $('#manage-menu [name="username"]').val(resp.username);
+                    $('#manage-menu [name="type"]').val(resp.type);
+                    $('#manage-menu').modal('show');
+                }
+            }
+        });
+    });
+	
+    // Delete User
+    $('.delete_user').click(function() {
+        const userId = $(this).data('id');
+        if (confirm('Are you sure you want to delete this user?')) {
+            $.ajax({
+                url: 'ajax.php?action=delete_user',
+                method: 'POST',
+                data: {id: userId},
+                dataType: 'json',
+                success: function(resp) {
+                    alert(resp.success);
+                    location.reload();
+                }
+            });
+        }
+    });
 
 </script>

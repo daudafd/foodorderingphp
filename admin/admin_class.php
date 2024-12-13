@@ -15,22 +15,27 @@ Class Action {
 	}
 
 	function login() {
-		extract($_POST);
+		// Extract POST data
+		$username = $_POST['username'] ?? '';
+		$password = $_POST['password'] ?? '';
 	
 		// Check if username and password are provided
 		if (empty($username) || empty($password)) {
 			return "Username or Password is empty.";
 		}
 	
-		// Fetch user with the provided username
-		$qry = $this->db->query("SELECT * FROM users WHERE username = '$username'");
-		
+		// Prepare SQL statement to prevent SQL injection
+		$stmt = $this->db->prepare("SELECT * FROM users WHERE username = ?");
+		$stmt->bind_param('s', $username); // 's' means the parameter is a string
+		$stmt->execute();
+		$result = $stmt->get_result();
 	
-		if ($qry->num_rows > 0) {
-			$user = $qry->fetch_assoc();
+		if ($result->num_rows > 0) {
+			$user = $result->fetch_assoc();
 	
 			// Verify the provided password against the stored hash
 			if (password_verify($password, $user['password'])) {
+				// Store user session (exclude password)
 				foreach ($user as $key => $value) {
 					if ($key != 'password' && !is_numeric($key)) {
 						$_SESSION['login_' . $key] = $value;
@@ -44,6 +49,7 @@ Class Action {
 			return 3; // User not found
 		}
 	}
+	
 
 
 	function login2() {
@@ -126,34 +132,69 @@ Class Action {
 	}
 
 	function save_user() {
-		extract($_POST);
+		// Check for required fields in POST request
+		if (!isset($_POST['name'], $_POST['username'], $_POST['password'], $_POST['type'])) {
+			die(json_encode(['status' => 'error', 'message' => 'Missing required fields.']));
+		}
 	
-		// Prepare the data
-		$data = " name = '$name', ";
-		$data .= " username = '$username', ";
-		
-		// Only hash the password if it's provided
+		// Sanitize input data
+		$name = $this->db->real_escape_string($_POST['name']);
+		$username = $this->db->real_escape_string($_POST['username']);
+		$password = $_POST['password'] ?? '';
+		$type = "2";
+
+		// Prepare data string
+		$data = "name = '$name', username = '$username', type = '$type'";
 		if (!empty($password)) {
 			$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-			$data .= " password = '$hashedPassword', ";
+			$data .= ", password = '$hashedPassword'";
 		}
-	
-		$data .= " type = '$type' ";
 	
 		// Insert or update logic
-		if (empty($id)) {
-			// New user creation
-			$save = $this->db->query("INSERT INTO users SET $data");
+		if (empty($_POST['id'])) {
+			$query = "INSERT INTO users SET $data";
 		} else {
-			// Update existing user
-			$save = $this->db->query("UPDATE users SET $data WHERE id = $id");
+			$id = $this->db->real_escape_string($_POST['id']);
+			$query = "UPDATE users SET $data WHERE id = '$id'";
 		}
 	
-		if ($save) {
-			return 1;
+		// Execute query and handle errors
+		$result = $this->db->query($query);
+		if (!$result) {
+			die(json_encode(['status' => 'error', 'message' => 'Database Error: ' . $this->db->error]));
 		}
-	}	
 	
+		// Success response
+		return json_encode(['status' => 'success', 'message' => 'User saved successfully.']);
+	}
+
+	function get_user($id) {
+
+        $query = $conn->prepare("SELECT * FROM users WHERE id = ?");
+        $query->bind_param("i", $id);
+        $query->execute();
+        $result = $query->get_result();
+        $user = $result->fetch_assoc();
+        $query->close();
+
+        return $user;
+    }
+
+	function delete_user($id) {
+		// Sanitize the user ID to prevent SQL injection
+		$id = $this->db->real_escape_string($id);
+		
+		// Query to delete the user
+		$query = "DELETE FROM users WHERE id = '$id'";
+		$result = $this->db->query($query);
+	
+		if ($result) {
+			return json_encode(['status' => 'success', 'message' => 'User deleted successfully.']);
+		} else {
+			return json_encode(['status' => 'error', 'message' => 'Failed to delete user.']);
+		}
+	}
+			
 	function signup() {
 		// Debugging: Output only in non-production mode
 		if (defined('DEBUG') && DEBUG) {
