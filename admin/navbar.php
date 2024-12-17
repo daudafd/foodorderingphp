@@ -29,15 +29,16 @@ html,body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 <!-- Top container -->
 <div class="w3-bar w3-top w3-black w3-large" style="z-index:4">
   <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
-  <span class="w3-bar-item w3-right">Logo</span>
+  <span class="w3-bar-item w3-right">FIFI's Cuisine</span>
 </div>
 
 <!-- Sidebar/menu -->
 <nav class="w3-sidebar w3-collapse w3-white w3-animate-left" style="z-index:3;width:300px;" id="mySidebar"><br>
   <div class="w3-container w3-row">
     <div class="w3-col s4">
-      <img src="/w3images/avatar2.png" class="w3-circle w3-margin-right" style="width:46px">
+      <!-- <img src="/w3images/avatar2.png" class="w3-circle w3-margin-right" style="width:46px"> -->
     </div>
+    <p>.</p>
     <div class="w3-col s8 w3-bar">
       <span><strong><?php echo "Welcome back ".$_SESSION['login_name']."!"  ?></strong></span><br>
       <a href="ajax.php?action=logout" class="w3-bar-item w3-button"><i class="fa fa-power-off"></i></a>
@@ -57,7 +58,7 @@ html,body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
     <a href="index.php?page=categories" class="w3-bar-item w3-button w3-padding"><i class="fa fa-list-ol fa-fw"></i>  Category List</a>
 
     <?php if($_SESSION['login_type'] == 1): ?>
-        <a href="index.php?page=users" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user fa-fw"></i>  Users</a>
+        <a href="index.php?page=user2" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user fa-fw"></i>  Users</a>
         <a href="index.php?page=site_settings" class="w3-bar-item w3-button w3-padding"><i class="fa fa-cog fa-fw"></i>   Site Settings</a>
 			<?php endif; ?>
  </div>

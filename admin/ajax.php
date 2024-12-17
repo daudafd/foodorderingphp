@@ -8,10 +8,10 @@ $crud = new Action();
 
 // Define valid actions to prevent invalid input
 $valid_actions = [
-    'login', 'login2', 'logout', 'logout2', 'save_user', 'signup', 
+    'login', 'login2', 'logout', 'logout2', 'save_user', 'delete_user', 'signup', 
     'save_settings', 'save_category', 'delete_category', 'save_menu', 
     'delete_menu', 'add_to_cart', 'get_cart_count', 'update_cart_qty', 
-    'save_order', 'confirm_order'
+    'save_order', 'confirm_order', 'count_today_orders'
 ];
 
 // Sanitize the action parameter to ensure it's a valid action
@@ -78,8 +78,13 @@ switch ($action) {
             }
             break;
 
-            case 'delete_category':
-                echo $crud->delete_category(); // This will echo the JSON response from the delete_category function
+            case 'delete_user':
+                if (isset($_POST['id'])) {
+                    $response = $crud->delete_user($_POST['id']); // Correct function call
+                    echo $response; // Should already be JSON-encoded in the function
+                } else {
+                    echo json_encode(['error' => 'User ID not provided']);
+                }
                 break;
 
     case 'signup':
@@ -172,6 +177,11 @@ switch ($action) {
             echo json_encode(['error' => 'Failed to confirm order']);
         }
         break;
+
+        case 'count_today_orders':
+            $counts = $crud->count_today_orders();
+            echo json_encode($counts); // Return counts as JSON
+            break;
 
     default:
         echo json_encode(['error' => 'Invalid action']);

@@ -79,7 +79,7 @@
 									</td>
 									<td class="text-center">
                                     <button class="btn btn-sm btn-primary edit_user" type="button" data-id="<?php echo $row['id'] ?>" data-name="<?php echo $row['name'] ?>" data-username="<?php echo $row['username'] ?>">Edit</button>
-                                    <button class="btn btn-sm btn-danger delete_user" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>
+                                    <button class="btn btn-sm btn-danger del_user" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>
 									</td>
 								</tr>
 								<?php endwhile; ?>
@@ -142,22 +142,23 @@ $('.edit_user').click(function(){
     end_load();
 });
 
-$('.delete_user').click(function(){
-    _conf("Are you sure you want to delete this user?", "delete_user", [$(this).attr('data-id')]);
+$('.del_user').click(function(){
+    _conf("Are you sure you want to delete this user?", "del_user", [$(this).attr('data-id')]);
 });
 
-function delete_user(id) {
+function del_user(id) {
     start_load();
     $.ajax({
         url: 'ajax.php?action=delete_user',
         method: 'POST',
-        data: {id: id},  // Pass the ID to the PHP script
+        data: {id: id},
         success: function(resp) {
+            console.log(resp); // Debug response
             var response = JSON.parse(resp);
             if (response.status === 'success') {
                 alert_toast(response.message, 'success');
-                setTimeout(function() {
-                    location.reload();  // Reload the page after successful deletion
+                setTimeout(function(){
+                    location.reload();
                 }, 500);
             } else {
                 alert_toast(response.message, 'error');
@@ -168,5 +169,6 @@ function delete_user(id) {
         }
     });
 }
+
 
 </script>

@@ -181,19 +181,23 @@ Class Action {
     }
 
 	function delete_user($id) {
-		// Sanitize the user ID to prevent SQL injection
+		// Sanitize the user ID
 		$id = $this->db->real_escape_string($id);
-		
+	
 		// Query to delete the user
 		$query = "DELETE FROM users WHERE id = '$id'";
 		$result = $this->db->query($query);
 	
+		// Debugging: Check if query executed successfully
 		if ($result) {
 			return json_encode(['status' => 'success', 'message' => 'User deleted successfully.']);
 		} else {
+			// Log the SQL error
+			error_log("Delete User Error: " . $this->db->error);
 			return json_encode(['status' => 'error', 'message' => 'Failed to delete user.']);
 		}
 	}
+	
 			
 	function signup() {
 		// Debugging: Output only in non-production mode
@@ -519,8 +523,7 @@ Class Action {
 	
 		exit; // Stop script execution
 	}
-	
-	
+		
 
 function confirm_order(){
 	extract($_POST);
@@ -528,5 +531,36 @@ function confirm_order(){
 		if($save)
 			return 1;
 }
+
+
+function count_today_orders() {
+    $today = date('Y-m-d'); // Get today's date in 'YYYY-MM-DD' format
+    
+    // Query to count pending orders
+    $pending_query = "SELECT COUNT(*) as pending_count 
+                      FROM orders 
+                      WHERE DATE(created_at) = '$today' AND status = 0";
+    $pending_result = $this->db->query($pending_query);
+    $pending_count = $pending_result ? $pending_result->fetch_assoc()['pending_count'] : 0;
+
+    // Query to count confirmed orders
+    $confirmed_query = "SELECT COUNT(*) as confirmed_count 
+                        FROM orders 
+                        WHERE DATE(created_at) = '$today' AND status = 1";
+    $confirmed_result = $this->db->query($confirmed_query);
+    $confirmed_count = $confirmed_result ? $confirmed_result->fetch_assoc()['confirmed_count'] : 0;
+
+    // Calculate total orders for the day
+    $total_orders = $pending_count + $confirmed_count;
+
+    // Return counts as an array
+    return [
+        'pending' => $pending_count,
+        'confirmed' => $confirmed_count,
+        'total' => $total_orders
+    ];
+}
+
+
 
 }
