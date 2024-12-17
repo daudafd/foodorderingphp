@@ -74,14 +74,14 @@ button:disabled {
 	<div class="limiter">
 		<div class="container-login100">
 			<div class="wrap-login100">
-				<div class="login100-form-title" style="background-image: url(assets/images/foodbanner.jpg);">
-				</div>
+				<div class="login100-form-title" style="background-image: url(assets/images/foodbanner.jpg);"></div>
 
-				
 				<form class="login100-form validate-form" form id="login-form" method="POST">
-				<span class="login100-form-title-1">
+					<span class="login100-form-title-1">
 						Sign In
 					</span>
+					<div id="error-message" style="color: red; margin-top: 10px; display: none;"></div>
+
 					<div class="wrap-input100 validate-input m-b-26" data-validate="Username is required">
 						<span class="label-input100">Username</span>
 						<input class="input100" type="text" name="username" placeholder="Enter username" required class="form-control">
@@ -129,8 +129,10 @@ $('#login-form').submit(function (e) {
     var $submitBtn = $('#login-form button[type="submit"]');
     var $spinner = $submitBtn.find('.spinner');
     var $buttonText = $submitBtn.find('.button-text');
+    var $errorMessage = $('#error-message'); // Reference to the error message div
 
-    // Disable button and show the spinner
+    // Reset error message and UI
+    $errorMessage.hide().text('');
     $submitBtn.attr('disabled', true);
     $spinner.show(); // Show the spinner
     $buttonText.text('Logging in...'); // Update the button text
@@ -146,14 +148,15 @@ $('#login-form').submit(function (e) {
                     // Successful login: Redirect to home page
                     window.location.href = 'index.php?page=home';
                 } else {
-                    alert('Login failed: ' + data.error);
+                    // Show error message below the login form
+                    $errorMessage.text('Login failed: ' + data.error).show();
                     $submitBtn.attr('disabled', false);
                     $spinner.hide(); // Hide the spinner
                     $buttonText.text('Login'); // Reset the button text
                 }
             },
             error: function () {
-                alert('An error occurred, please try again.');
+                $errorMessage.text('An error occurred, please try again.').show();
                 $submitBtn.attr('disabled', false);
                 $spinner.hide(); // Hide the spinner
                 $buttonText.text('Login'); // Reset the button text
@@ -161,5 +164,6 @@ $('#login-form').submit(function (e) {
         });
     }, 1200); // Optional delay for spinner visibility before AJAX call
 });
+
 </script>	
 </html>

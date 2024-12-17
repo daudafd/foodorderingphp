@@ -21,36 +21,35 @@ Class Action {
 	
 		// Check if username and password are provided
 		if (empty($username) || empty($password)) {
-			return "Username or Password is empty.";
+			return json_encode(['success' => false, 'error' => 'Username or Password is required.']);
 		}
 	
 		// Prepare SQL statement to prevent SQL injection
 		$stmt = $this->db->prepare("SELECT * FROM users WHERE username = ?");
-		$stmt->bind_param('s', $username); // 's' means the parameter is a string
+		$stmt->bind_param('s', $username);
 		$stmt->execute();
 		$result = $stmt->get_result();
 	
 		if ($result->num_rows > 0) {
 			$user = $result->fetch_assoc();
-	
-			// Verify the provided password against the stored hash
+			// Verify the provided password
 			if (password_verify($password, $user['password'])) {
-				// Store user session (exclude password)
+				// Store user session
 				foreach ($user as $key => $value) {
 					if ($key != 'password' && !is_numeric($key)) {
 						$_SESSION['login_' . $key] = $value;
 					}
 				}
-				return 1; // Login successful
+				return json_encode(['success' => true]);
 			} else {
-				return 3; // Incorrect password
+				return json_encode(['success' => false, 'error' => 'Incorrect password.']);
 			}
 		} else {
-			return 3; // User not found
+			return json_encode(['success' => false, 'error' => 'User does not exist.']);
 		}
 	}
 	
-
+	
 
 	function login2() {
 		extract($_POST);
@@ -102,7 +101,6 @@ Class Action {
 		}
 	}
 		
-	
 	
 	// Helper function to get the client's IP address
 	private function getClientIP() {

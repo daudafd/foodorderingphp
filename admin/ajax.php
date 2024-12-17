@@ -27,13 +27,10 @@ if ($action === null) {
 // Handle each action
 switch ($action) {
     case 'login':
-        $login = $crud->login();
-        if ($login) {
-            echo json_encode(['success' => $login]);
-        } else {
-            echo json_encode(['error' => 'Login failed']);
-        }
+        $response = $crud->login();
+        echo $response; // Return JSON response directly
         break;
+    
 
     case 'login2':
         $login = $crud->login2();

@@ -38,12 +38,12 @@ html,body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
     <div class="w3-col s4">
       <!-- <img src="/w3images/avatar2.png" class="w3-circle w3-margin-right" style="width:46px"> -->
     </div>
-    <p>.</p>
+    <p></p>
     <div class="w3-col s8 w3-bar">
       <span><strong><?php echo "Welcome back ".$_SESSION['login_name']."!"  ?></strong></span><br>
       <a href="ajax.php?action=logout" class="w3-bar-item w3-button"><i class="fa fa-power-off"></i></a>
-      <a href="#" class="w3-bar-item w3-button"><i class="fa fa-user"></i></a>
-      <a href="#" class="w3-bar-item w3-button"><i class="fa fa-cog"></i></a>
+      <a href="index.php?page=user2" class="w3-bar-item w3-button"><i class="fa fa-user"></i></a>
+      <a href="index.php?page=site_settings" class="w3-bar-item w3-button"><i class="fa fa-cog"></i></a>
     </div>
   </div>
   <hr>
