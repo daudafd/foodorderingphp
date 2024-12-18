@@ -1,10 +1,41 @@
+ <style>
+    /* Set fixed size for cards */
+.card.menu-item {
+  height: 350px; /* Fixed height */
+  width: 100%; /* Adjust to column width */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Ensure the image fits */
+.card.menu-item .card-img-top {
+  height: 150px; /* Fixed height for images */
+  object-fit: cover; /* Crop or scale the image to fit */
+  border-radius: 0; /* Optional: Remove any rounded corners */
+}
+
+/* Truncate text */
+.card.menu-item .truncate {
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add "..." for overflowing text */
+}
+
+/* Ensure buttons align */
+.card.menu-item .text-center {
+  margin-top: auto; /* Push buttons to the bottom */
+}
+
+</style>
+ 
  <!-- Masthead-->
         <header class="masthead">
             <div class="container h-100">
                 <div class="row h-100 align-items-center justify-content-center text-center">
                     <div class="col-lg-10 align-self-end mb-4 page-title">
-                    	<h3 class="text-white">Welcome to <?php echo $_SESSION['setting_name']; ?></h3>
-                        <hr class="divider my-4" />
+                    	<!-- <h3 class="text-white">Welcome to <?php echo $_SESSION['setting_name']; ?></h3>
+                        <hr class="divider my-4" /> -->
                         <a class="btn btn-primary btn-xl js-scroll-trigger" href="#menu">Order Now</a>
 
                     </div>
@@ -28,7 +59,6 @@
                           <p class="card-text truncate">#<?php echo $row['price'] ?>.00</p>
                           <div class="text-center">
                               <button class="btn btn-sm btn-outline-primary view_prod btn-block" data-id=<?php echo $row['id'] ?>><i class="fa fa-eye"></i> View</button>
-                              
                           </div>
                         </div>
                         

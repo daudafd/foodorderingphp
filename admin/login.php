@@ -80,7 +80,7 @@ button:disabled {
 					<span class="login100-form-title-1">
 						Sign In
 					</span>
-					<div id="error-message" style="color: red; margin-top: 10px; display: none;"></div>
+					<div id="error-message" style="color: red;  display: none;"></div>
 
 					<div class="wrap-input100 validate-input m-b-26" data-validate="Username is required">
 						<span class="label-input100">Username</span>

@@ -2,7 +2,6 @@
 <div class="container-fluid">
 	<!-- <form action="" id="signup-form"> -->
 	<form id="signup-form" method="POST" action="admin/ajax.php?action=signup">
-
 		<div class="form-group">
 			<label for="" class="control-label">Firstname</label>
 			<input type="text" name="first_name" placeholder="Input your First name" required="" class="form-control">
@@ -16,19 +15,23 @@
 			<input type="text" name="mobile" placeholder="Input your Phone Number" required="" class="form-control">
 		</div>
 		<div class="form-group">
-			<label for="" class="control-label">Address</label>
-			<textarea cols="30" rows="3" name="address" placeholder="Input your address here" required="" class="form-control"></textarea>
-		</div>
-		<div class="form-group">
 			<label for="" class="control-label">Email</label>
 			<input type="email" name="email" placeholder="Input your email" required="" class="form-control">
+		</div>
+		<div class="form-group">
+			<label for="" class="control-label">Address</label>
+			<textarea cols="30" rows="3" name="address" placeholder="Input your address here" required="" class="form-control"></textarea>
 		</div>
 		<div class="form-group">
 			<label for="" class="control-label">Password</label>
 			<input type="password" name="password" placeholder="input your password" required="" class="form-control">
 		</div>
-		<button class="button btn btn-info btn-sm">Create</button>
+		<div>
+			<button class="button btn btn-info btn-sm">Create</button>
+			<small><a href="javascript:void(0)" id="signin">Sign In here...</a></small>
+		</div>
 	</form>
+
 </div>
 
 <style>
@@ -37,6 +40,10 @@
 	}
 </style>
 <script>
+$('#signin').click(function(){
+		uni_modal("Login here",'login.php?redirect=index.php?page=checkout')
+	})
+
 $('#signup-form').submit(function(e) {
     e.preventDefault();
 

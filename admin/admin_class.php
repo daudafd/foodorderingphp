@@ -49,29 +49,35 @@ Class Action {
 		}
 	}
 	
-	
 
 	function login2() {
-		extract($_POST);
+		// Extract POST data
+		$email = $_POST['email'] ?? ''; // Ensure data exists
+		$password = $_POST['password'] ?? ''; // Ensure data exists
 	
-		// Check if username and password are provided
+		// Check if email and password are provided
 		if (empty($email) || empty($password)) {
 			return "Email or Password is empty.";
 		}
 	
-		// Fetch user with the provided username
-		$qry = $this->db->query("SELECT * FROM user_info WHERE email = '$email'");
-		if ($qry->num_rows > 0) {
-			$user = $qry->fetch_assoc();
+		// Use prepared statement to prevent SQL injection
+		$stmt = $this->db->prepare("SELECT * FROM user_info WHERE email = ?");
+		$stmt->bind_param('s', $email); // 's' means the parameter is a string
+		$stmt->execute();
+		$result = $stmt->get_result();
+	
+		if ($result->num_rows > 0) {
+			$user = $result->fetch_assoc();
 	
 			// Verify the provided password against the stored hash
 			if (password_verify($password, $user['password'])) {
-				// Set session variables for the user
+				// Set session variables for the user (excluding password)
 				foreach ($user as $key => $value) {
 					if ($key != 'password' && !is_numeric($key)) {
 						$_SESSION['login_' . $key] = $value;
 					}
 				}
+	
 				// Set additional fields if available
 				$_SESSION['address'] = $user['address'] ?? '';
 				$_SESSION['mobile'] = $user['mobile'] ?? '';
@@ -85,8 +91,9 @@ Class Action {
 						$user_id = $_SESSION['login_user_id'];
 	
 						// Insert into the cart table (assuming a cart table exists with columns for user ID, product ID, and quantity)
-						$this->db->query("INSERT INTO cart (product_id, qty, user_id) 
-										  VALUES ('$product_id', '$qty', '$user_id')");
+						$cart_stmt = $this->db->prepare("INSERT INTO cart (product_id, qty, user_id) VALUES (?, ?, ?)");
+						$cart_stmt->bind_param('iii', $product_id, $qty, $user_id);
+						$cart_stmt->execute();
 					}
 					// Clear the session's cart after transferring the items to the database
 					unset($_SESSION['cart_items']);
@@ -94,14 +101,14 @@ Class Action {
 	
 				return 1; // Login successful
 			} else {
-				return 3; // Incorrect password
+				return "Incorrect password."; // Incorrect password
 			}
 		} else {
-			return 3; // User not found
+			return "User not found."; // User not found
 		}
 	}
-		
 	
+			
 	// Helper function to get the client's IP address
 	private function getClientIP() {
 		if (isset($_SERVER['HTTP_CLIENT_IP'])) {
@@ -558,7 +565,5 @@ function count_today_orders() {
         'total' => $total_orders
     ];
 }
-
-
 
 }

@@ -18,6 +18,21 @@
 		  background-repeat: no-repeat;
 		  background-size: cover;
 		}
+
+    #mainNav .navbar-brand,
+    #mainNav .nav-link {
+      color: #ffffff !important; /* Ensure white text */
+    }
+
+    #mainNav .navbar-brand:hover,
+    #mainNav .nav-link:hover {
+      color: #000 !important; /* Hover color for navbar brand and nav links */
+    }
+
+    .navbar-toggler-icon {
+      filter: invert(1); /* Make the toggle icon white */
+    }
+
     </style>
     <body id="page-top">
         <!-- Navigation-->
@@ -25,7 +40,7 @@
         <div class="toast-body text-white">
         </div>
       </div>
-        <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3" id="mainNav">
+        <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3" style="background-color: #ea3b16;" id="mainNav">
             <div class="container">
                 <a class="navbar-brand js-scroll-trigger" href="./"><?php echo $_SESSION['setting_name'] ?></a>
                 <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
