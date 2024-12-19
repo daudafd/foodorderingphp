@@ -430,104 +430,85 @@ Class Action {
 		return 1;	
 	}
 
-	function save_order() {
-		// Start session (if not already started)
+	function save_order($transaction_reference = null) {
 		if (session_status() == PHP_SESSION_NONE) {
 			session_start();
 		}
 	
-		// Get user data from session and POST
 		$first_name = trim($_SESSION['login_first_name'] ?? '');
 		$last_name = trim($_SESSION['login_last_name'] ?? '');
 		$email = trim($_SESSION['login_email'] ?? '');
-		$address = trim($_SESSION['address'] ?? ''); // Address from session
-		$mobile = trim($_SESSION['mobile'] ?? '');  // Mobile from session
-		
-		// $address = trim($_POST['address'] ?? '');
-		// $mobile = trim($_POST['mobile'] ?? '');
+		$address = trim($_SESSION['address'] ?? '');
+		$mobile = trim($_SESSION['mobile'] ?? '');
+		$mobile = trim($_SESSION['mobile'] ?? '');
 	
-		// Debug input data
-		error_log("First Name: $first_name");
-		error_log("Last Name: $last_name");
-		error_log("Email: $email");
-		error_log("Address: $address");
-		error_log("Mobile: $mobile");
-	
-		// Validate data
 		if (empty($first_name) || empty($last_name) || empty($address) || empty($mobile) || empty($email)) {
 			echo json_encode(["error" => "Incomplete order details"]);
-			exit; // Stop script execution
-		}
-	
-		if (empty($_SESSION['login_user_id'])) {
-			echo json_encode(["error" => "Session expired. Please log in again."]);
 			exit;
 		}
 	
-		// Escape data to prevent SQL injection
-		$address = $this->db->real_escape_string($address);
-		$mobile = $this->db->real_escape_string($mobile);
-		$email = $this->db->real_escape_string($email);
+		if (!isset($_SESSION['total_amount'])) {
+			echo json_encode(["error" => "Total amount is missing."]);
+			exit;
+		}
 	
-		// Start transaction
+		$delivery_charge = $_POST['delivery_charge'] ?? 0;
+		// $plastic_charge = $_POST['plastic_charge'] ?? 0;
+		$item_total = $_SESSION['total_amount'];
+		$total_amount = $item_total + $delivery_charge;
+	
 		$this->db->begin_transaction();
 		try {
-			// Insert order into database
 			$data = " name = '" . $first_name . " " . $last_name . "' ";
-			$data .= ", address = '$address' ";
-			$data .= ", mobile = '$mobile' ";
-			$data .= ", email = '$email' ";
-			$data .= ", user_id = '" . $_SESSION['login_user_id'] . "' "; // Optional: link the order to the user
+			$data .= ", address = '{$this->db->real_escape_string($address)}' ";
+			$data .= ", mobile = '{$this->db->real_escape_string($mobile)}' ";
+			$data .= ", email = '{$this->db->real_escape_string($email)}' ";
+			$data .= ", delivery_charge = '$delivery_charge' ";
+			// $data .= ", plastic_charge = '$plastic_charge' ";
+			$data .= ", total_amount = '$total_amount' ";
+			$data .= ", item_total = '$item_total' ";
+			$data .= ", user_id = '{$_SESSION['login_user_id']}' ";
+	
+			if ($transaction_reference) {
+				$data .= ", transaction_reference = '{$this->db->real_escape_string($transaction_reference)}' ";
+			}
 	
 			$save = $this->db->query("INSERT INTO orders SET " . $data);
-			if (!$save) {
-				throw new Exception("Failed to insert order: " . $this->db->error);
-			}
+			if (!$save) throw new Exception("Failed to insert order: " . $this->db->error);
 	
-			$order_id = $this->db->insert_id; // Get the inserted order ID
+			$order_id = $this->db->insert_id;
 	
-			// Fetch cart items for the user
 			$qry = $this->db->query("SELECT * FROM cart WHERE user_id = " . $_SESSION['login_user_id']);
-			if (!$qry) {
-				throw new Exception("Failed to fetch cart: " . $this->db->error);
-			}
+			if (!$qry) throw new Exception("Failed to fetch cart: " . $this->db->error);
 	
-			// Process each cart item
 			while ($row = $qry->fetch_assoc()) {
-				$data = " order_id = '$order_id' ";
-				$data .= ", product_id = '" . $row['product_id'] . "' ";
-				$data .= ", qty = '" . $row['qty'] . "' ";
+				$item_data = " order_id = '$order_id' ";
+				$item_data .= ", product_id = '" . $row['product_id'] . "' ";
+				$item_data .= ", qty = '" . $row['qty'] . "' ";
 	
-				$save_item = $this->db->query("INSERT INTO order_list SET " . $data);
-				if (!$save_item) {
+				if (!$this->db->query("INSERT INTO order_list SET " . $item_data)) {
 					throw new Exception("Failed to insert order item: " . $this->db->error);
 				}
 	
-				// Remove the item from the cart
-				$delete_cart = $this->db->query("DELETE FROM cart WHERE id = " . $row['id']);
-				if (!$delete_cart) {
-					throw new Exception("Failed to delete cart item: " . $this->db->error);
+				$client_ip = $_SERVER['REMOTE_ADDR'];
+				if (!$this->db->query("DELETE FROM cart WHERE user_id = {$_SESSION['login_user_id']} OR client_ip = '$client_ip'")) {
+					throw new Exception("Failed to delete cart items: " . $this->db->error);
 				}
 			}
 	
-			// Commit transaction
 			$this->db->commit();
+			unset($_SESSION['total_amount']);
 	
-			// Return success response
 			echo json_encode(["success" => "Order saved successfully", "redirect_url" => "/home"]);
 		} catch (Exception $e) {
-			// Rollback transaction on error
 			$this->db->rollback();
-			
-			// Log the error
 			error_log("Order processing failed: " . $e->getMessage());
-			
-			// Return error response
 			echo json_encode(["error" => "Order processing failed. Please try again."]);
 		}
-	
-		exit; // Stop script execution
+		exit;
 	}
+	
+	
 		
 
 function confirm_order(){

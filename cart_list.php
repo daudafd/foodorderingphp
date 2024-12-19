@@ -18,7 +18,7 @@
 	        		<div class="card">
 	        			<div class="card-body">
 	        				<div class="row">
-		        				<div class="col-md-8"><b>Card</b></div>
+		        				<div class="col-md-8"><b>Item(s)</b></div>
 		        				<div class="col-md-4 text-right"><b>Total</b></div>
 	        				</div>
 	        			</div>
@@ -36,6 +36,7 @@
 				$get = $conn->query("SELECT *,c.id as cid FROM cart c inner join product_list p on p.id = c.product_id ".$data);
 				while($row= $get->fetch_assoc()):
 					$total += ($row['qty'] * $row['price']);
+					$_SESSION['total_amount'] = $total;
         		?>
 
         		<div class="card">
