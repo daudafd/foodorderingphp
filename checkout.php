@@ -67,8 +67,6 @@
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-<script src="https://js.paystack.co/v1/inline.js"></script>
-<script>
 function initializeCheckoutPage() {
     // Get DOM elements
     const deliveryOption = document.getElementById('delivery_option');
@@ -96,6 +94,9 @@ function initializeCheckoutPage() {
             phone: "<?php echo $_SESSION['login_mobile']; ?>"
         };
 
+        console.log("Generated Payment Reference:", orderDetails.reference); // Add this
+
+
         // Validate amount
         if (orderDetails.amount <= 0) {
             alert("Total amount is invalid. Please check your order.");
@@ -116,6 +117,7 @@ function initializeCheckoutPage() {
                 ]
             },
             callback: function(response) {
+                console.log("Payment Reference from Paystack:", response.reference); // Log Paystack response
                 saveOrder(response.reference);
             },
             onClose: function() {
@@ -128,6 +130,19 @@ function initializeCheckoutPage() {
 
     // Save order via AJAX
     function saveOrder(paymentReference) {
+       
+        const orderData = {
+        first_name: $('input[name="first_name"]').val(),
+        last_name: $('input[name="last_name"]').val(),
+        mobile: $('input[name="mobile"]').val(),
+        address: $('input[name="address"]').val(),
+        email: $('input[name="email"]').val(),
+        delivery_charge: deliveryOption.value,
+        payment_reference: paymentReference
+    };
+
+    // Log the data to be sent
+    console.log("Sending order data:", orderData);
         $.ajax({
             url: 'admin/ajax.php?action=save_order',
             type: 'POST',
@@ -138,7 +153,7 @@ function initializeCheckoutPage() {
                 address: $('input[name="address"]').val(),
                 email: $('input[name="email"]').val(),
                 delivery_charge: deliveryOption.value,
-                payment_reference: paymentReference
+                payment_reference: paymentReference || 'cash delivery' // Set an empty string for non-Paystack orders
             },
             success: function(response) {
                 let res = JSON.parse(response);
@@ -164,10 +179,6 @@ function initializeCheckoutPage() {
         handlePayment();
     });
 
-    checkoutForm.addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent form submission
-        saveOrder(null); // Save order without payment reference for non-Paystack orders
-    });
 
     // Initial total calculation
     updateTotal();
@@ -175,6 +186,4 @@ function initializeCheckoutPage() {
 
 // Initialize checkout page scripts
 document.addEventListener('DOMContentLoaded', initializeCheckoutPage);
-</script>
-
 </script>

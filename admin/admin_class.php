@@ -430,6 +430,7 @@ Class Action {
 		return 1;	
 	}
 
+
 	function save_order($transaction_reference = null) {
 		if (session_status() == PHP_SESSION_NONE) {
 			session_start();
@@ -440,8 +441,12 @@ Class Action {
 		$email = trim($_SESSION['login_email'] ?? '');
 		$address = trim($_SESSION['address'] ?? '');
 		$mobile = trim($_SESSION['mobile'] ?? '');
-		$mobile = trim($_SESSION['mobile'] ?? '');
-	
+
+		$transaction_reference = $_POST['payment_reference'] ?? null;
+		$delivery_charge = $_POST['delivery_charge'] ?? 0;
+		$item_total = $_SESSION['total_amount'];
+		$total_amount = $item_total + $delivery_charge;
+		
 		if (empty($first_name) || empty($last_name) || empty($address) || empty($mobile) || empty($email)) {
 			echo json_encode(["error" => "Incomplete order details"]);
 			exit;
@@ -452,11 +457,6 @@ Class Action {
 			exit;
 		}
 	
-		$delivery_charge = $_POST['delivery_charge'] ?? 0;
-		// $plastic_charge = $_POST['plastic_charge'] ?? 0;
-		$item_total = $_SESSION['total_amount'];
-		$total_amount = $item_total + $delivery_charge;
-	
 		$this->db->begin_transaction();
 		try {
 			$data = " name = '" . $first_name . " " . $last_name . "' ";
@@ -464,13 +464,16 @@ Class Action {
 			$data .= ", mobile = '{$this->db->real_escape_string($mobile)}' ";
 			$data .= ", email = '{$this->db->real_escape_string($email)}' ";
 			$data .= ", delivery_charge = '$delivery_charge' ";
-			// $data .= ", plastic_charge = '$plastic_charge' ";
 			$data .= ", total_amount = '$total_amount' ";
 			$data .= ", item_total = '$item_total' ";
 			$data .= ", user_id = '{$_SESSION['login_user_id']}' ";
-	
-			if ($transaction_reference) {
+			$data .= ", payment_status = 1";
+
+			
+			if ($transaction_reference !== null) {
 				$data .= ", transaction_reference = '{$this->db->real_escape_string($transaction_reference)}' ";
+			} else {
+				$data .= ", transaction_reference = NULL "; // Correctly store NULL
 			}
 	
 			$save = $this->db->query("INSERT INTO orders SET " . $data);
@@ -507,8 +510,6 @@ Class Action {
 		}
 		exit;
 	}
-	
-	
 		
 
 function confirm_order(){
