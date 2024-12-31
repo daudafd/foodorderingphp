@@ -562,7 +562,7 @@ Class Action {
 			$data .= ", total_amount = '$total_amount' ";
 			$data .= ", item_total = '$item_total' ";
 			$data .= ", user_id = '{$_SESSION['login_user_id']}' ";
-			$data .= ", payment_status = 1";
+			$data .= ", payment_status = 0";
 
 			
 			if ($transaction_reference !== null) {
@@ -607,12 +607,25 @@ Class Action {
 	}
 		
 
-function confirm_order(){
-	extract($_POST);
-		$save = $this->db->query("UPDATE orders set status = 1 where id= ".$id);
-		if($save)
+	function confirm_order(){
+		extract($_POST);
+		
+		// Fetch the delivery charge from the database based on order ID
+		$order = $this->db->query("SELECT delivery_charge FROM orders WHERE id = $id")->fetch_assoc();
+		$delivery_charge = $order['delivery_charge']; // Retrieve the delivery charge
+		
+		// Set payment status based on the delivery charge
+		$payment_status = ($delivery_charge > 0) ? 2 : 1; 
+		
+		// Update the order with the appropriate payment status
+		$save = $this->db->query("UPDATE orders SET payment_status = $payment_status WHERE id = $id");
+		
+		if($save) {
 			return 1;
-}
+		} else {
+			return 0;
+		}
+	}
 
 
 function count_today_orders() {

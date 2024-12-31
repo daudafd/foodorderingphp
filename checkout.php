@@ -12,53 +12,52 @@
 <div class="container">
     <div class="card">
         <div class="card-body">
-            <form action="" id="checkout-frm">
-                <h4>Confirm Delivery Information</h4> 
+            <form id="checkout-frm">
+                <h4>Confirm Delivery Information</h4>
                 <div class="form-group">
-                    <label for="" class="control-label">Firstname</label>
-                    <input type="text" name="first_name" required class="form-control" 
-                           value="<?php echo isset($_SESSION['login_first_name']) ? $_SESSION['login_first_name'] : ''; ?>">
+                    <label for="first_name" class="control-label">Firstname</label>
+                    <input type="text" id="first_name" name="first_name" required class="form-control" 
+                           value="<?php echo $_SESSION['login_first_name'] ?? ''; ?>">
                 </div>
                 <div class="form-group">
-                    <label for="" class="control-label">Last Name</label>
-                    <input type="text" name="last_name" required class="form-control" 
-                           value="<?php echo isset($_SESSION['login_last_name']) ? $_SESSION['login_last_name'] : ''; ?>">
+                    <label for="last_name" class="control-label">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" required class="form-control" 
+                           value="<?php echo $_SESSION['login_last_name'] ?? ''; ?>">
                 </div>
                 <div class="form-group">
-                    <label for="" class="control-label">Contact</label>
-                    <input type="text" name="mobile" required class="form-control" 
-                           value="<?php echo isset($_SESSION['login_mobile']) ? $_SESSION['login_mobile'] : ''; ?>">
+                    <label for="mobile" class="control-label">Contact</label>
+                    <input type="text" id="mobile" name="mobile" required class="form-control" 
+                           value="<?php echo $_SESSION['login_mobile'] ?? ''; ?>">
                 </div>
                 <div class="form-group">
-                    <label for="" class="control-label">Address</label>
-                    <input type="text" name="address" required class="form-control" 
-                           value="<?php echo isset($_SESSION['login_address']) ? $_SESSION['login_address'] : ''; ?>">
+                    <label for="address" class="control-label">Address</label>
+                    <input type="text" id="address" name="address" required class="form-control" 
+                           value="<?php echo $_SESSION['login_address'] ?? ''; ?>">
                 </div>
                 <div class="form-group">
-                    <label for="" class="control-label">Email</label>
-                    <input type="email" name="email" required class="form-control" 
-                           value="<?php echo isset($_SESSION['login_email']) ? $_SESSION['login_email'] : ''; ?>">
+                    <label for="email" class="control-label">Email</label>
+                    <input type="email" id="email" name="email" required class="form-control" 
+                           value="<?php echo $_SESSION['login_email'] ?? ''; ?>">
                 </div>
                 <div class="form-group">
-                    <label for="" class="control-label">Delivery Option</label>
+                    <label for="delivery_option" class="control-label">Delivery Option</label>
                     <select id="delivery_option" name="delivery_option" class="form-control">
                         <option value="0">Self Pickup (Free)</option>
                         <option value="1200">Home Delivery + Include Takeaway Plastic (+1200)</option>
                     </select>
                 </div>
-                <!-- <div class="form-group">
-                    <label for="" class="control-label">
-                        <input type="checkbox" id="plastic_option" name="plastic_option" value="200">
-                        Include Takeaway Plastic (+₦200)
-                    </label>
-                </div> -->
                 <div class="form-group">
-                    <label for="" class="control-label">Total Amount</label>
-                    <input type="text" readonly class="form-control" 
-                            value="<?php echo isset($_SESSION['total_amount']) ? number_format($_SESSION['total_amount'], 2) : '0.00'; ?>">
+                    <label for="total_amount" class="control-label">Total Amount</label>
+                    <input type="text" id="total_amount" readonly class="form-control" 
+                           value="<?php echo number_format($_SESSION['total_amount'] ?? 0, 2); ?>">
                 </div>
-                <div class="text-center">
-                    <button class="btn btn-block btn-primary" id="proceedToPayment">Proceed to Payment</button>
+                <div class="row">
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-block btn-secondary" id="proceedToPayment">Card Payment</button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-block btn-primary" id="transfer">Make Transfer</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -67,43 +66,32 @@
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-function initializeCheckoutPage() {
-    // Get DOM elements
+document.addEventListener('DOMContentLoaded', function () {
     const deliveryOption = document.getElementById('delivery_option');
-    const totalAmountField = document.querySelector('input[readonly]');
-    const checkoutForm = document.getElementById('checkout-frm');
+    const totalAmountField = document.getElementById('total_amount');
     const proceedToPaymentButton = document.getElementById('proceedToPayment');
 
-    // Base total amount from session
-    let baseTotal = <?php echo isset($_SESSION['total_amount']) ? $_SESSION['total_amount'] : 0; ?>;
+    let baseTotal = <?php echo $_SESSION['total_amount'] ?? 0; ?>;
 
-    // Update total amount based on delivery option
     function updateTotal() {
-        let deliveryCharge = parseFloat(deliveryOption.value) || 0;
-        let newTotal = baseTotal + deliveryCharge;
-        totalAmountField.value = newTotal.toFixed(2);
+        const deliveryCharge = parseFloat(deliveryOption.value) || 0;
+        totalAmountField.value = (baseTotal + deliveryCharge).toFixed(2);
     }
 
-    // Handle Paystack payment
     function handlePayment() {
         const orderDetails = {
             email: "<?php echo $_SESSION['login_email']; ?>",
-            amount: (baseTotal + parseFloat(deliveryOption.value || 0)) * 100, // Amount in kobo
-            reference: "PS" + Math.floor(Math.random() * 1000000000),
+            amount: (baseTotal + parseFloat(deliveryOption.value || 0)) * 100,
+            reference: "PS" + Math.floor(Math.random() * 1e9),
             name: "<?php echo $_SESSION['login_first_name'] . ' ' . $_SESSION['login_last_name']; ?>",
             phone: "<?php echo $_SESSION['login_mobile']; ?>"
         };
 
-        console.log("Generated Payment Reference:", orderDetails.reference); // Add this
-
-
-        // Validate amount
         if (orderDetails.amount <= 0) {
             alert("Total amount is invalid. Please check your order.");
             return;
         }
 
-        // Initialize Paystack
         const handler = PaystackPop.setup({
             key: 'pk_test_2e511fd2fd5ccbf4f54a1d85b0217526c2ad6eff',
             email: orderDetails.email,
@@ -116,11 +104,10 @@ function initializeCheckoutPage() {
                     { display_name: "Phone Number", variable_name: "phone_number", value: orderDetails.phone }
                 ]
             },
-            callback: function(response) {
-                console.log("Payment Reference from Paystack:", response.reference); // Log Paystack response
+            callback: function (response) {
                 saveOrder(response.reference);
             },
-            onClose: function() {
+            onClose: function () {
                 alert("Transaction was not completed. Please try again.");
             }
         });
@@ -128,62 +115,38 @@ function initializeCheckoutPage() {
         handler.openIframe();
     }
 
-    // Save order via AJAX
     function saveOrder(paymentReference) {
-       
         const orderData = {
-        first_name: $('input[name="first_name"]').val(),
-        last_name: $('input[name="last_name"]').val(),
-        mobile: $('input[name="mobile"]').val(),
-        address: $('input[name="address"]').val(),
-        email: $('input[name="email"]').val(),
-        delivery_charge: deliveryOption.value,
-        payment_reference: paymentReference
-    };
+            first_name: document.getElementById('first_name').value,
+            last_name: document.getElementById('last_name').value,
+            mobile: document.getElementById('mobile').value,
+            address: document.getElementById('address').value,
+            email: document.getElementById('email').value,
+            delivery_charge: deliveryOption.value,
+            payment_reference: paymentReference || 'cash delivery'
+        };
 
-    // Log the data to be sent
-    console.log("Sending order data:", orderData);
-        $.ajax({
-            url: 'admin/ajax.php?action=save_order',
-            type: 'POST',
-            data: {
-                first_name: $('input[name="first_name"]').val(),
-                last_name: $('input[name="last_name"]').val(),
-                mobile: $('input[name="mobile"]').val(),
-                address: $('input[name="address"]').val(),
-                email: $('input[name="email"]').val(),
-                delivery_charge: deliveryOption.value,
-                payment_reference: paymentReference || 'cash delivery' // Set an empty string for non-Paystack orders
-            },
-            success: function(response) {
-                let res = JSON.parse(response);
-                if (res.success) {
-                    alert(res.success);
-                    window.location.href = 'index.php?page=home';
-                } else if (res.error) {
-                    alert(res.error);
-                }
-            },
-            error: function(xhr, status, error) {
-                alert("An unexpected error occurred. Please try again.");
-                console.error("Error details:", xhr.responseText);
+        $.post('admin/ajax.php?action=save_order', orderData, function (response) {
+            const res = JSON.parse(response);
+            if (res.success) {
+                alert(res.success);
+                window.location.href = 'index.php?page=order';
+            } else if (res.error) {
+                alert(res.error);
             }
+        }).fail(function (xhr) {
+            alert("An unexpected error occurred. Please try again.");
+            console.error("Error details:", xhr.responseText);
         });
     }
 
-    // Event listeners
     deliveryOption.addEventListener('change', updateTotal);
 
-    proceedToPaymentButton.addEventListener('click', function(e) {
-        e.preventDefault(); // Prevent default button behavior
+    proceedToPaymentButton.addEventListener('click', function (e) {
+        e.preventDefault();
         handlePayment();
     });
 
-
-    // Initial total calculation
     updateTotal();
-}
-
-// Initialize checkout page scripts
-document.addEventListener('DOMContentLoaded', initializeCheckoutPage);
+});
 </script>

@@ -10,10 +10,28 @@
                 </div>
             </div>
         </header>
+        <?php
 
+// session_start();
+include('admin/db_connect.php');
+
+// Get system settings (you probably still need this)
+$qry = $conn->query("SELECT * FROM system_settings LIMIT 1");
+$meta = [];
+if ($qry->num_rows > 0) {
+    foreach ($qry->fetch_array() as $k => $val) {
+        $meta[$k] = $val;
+    }
+     // Check if name exists and assign it to the session
+     if (isset($meta['name'])) {
+      $setting_name = $meta['name'];
+      $setting_content = $meta['about_content'];
+  }
+}
+?> 
     <section class="page-section">
         <div class="container">
-    <?php echo html_entity_decode($_SESSION['setting_about_content']) ?>        
+    <?php echo html_entity_decode($setting_content) ?>        
             
         </div>
         </section>

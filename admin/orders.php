@@ -32,10 +32,10 @@
                                     <td><?php echo $row['address'] ?></td>
                                     <td><?php echo $row['mobile'] ?></td>
                                     <td><?php echo $row['created_at'] ?></td>
-                                    <?php if ($row['status'] == 1) : ?>
-                                        <td class="text-center"><span class="badge bg-success">Confirmed</span></td>
-                                    <?php else : ?>
+                                    <?php if ($row['payment_status'] == 0) : ?>
                                         <td class="text-center"><span class="badge bg-secondary">For Verification</span></td>
+                                    <?php else : ?>
+                                        <td class="text-center"><span class="badge bg-success">Confirmed</span></td>
                                     <?php endif; ?>
                                     <td>
                                         <button class="btn btn-sm btn-primary view_order" data-id="<?php echo $row['id'] ?>">View Order</button>
