@@ -96,11 +96,7 @@ switch ($action) {
 
         case 'save_settings':
             $save = $crud->save_settings();
-            if ($save) {
-                echo json_encode(['success' => 'Settings saved successfully']);
-            } else {
-                echo json_encode(['error' => 'Failed to save settings']);
-            }
+            echo $save; // Directly echo the JSON response from save_settings()
             break;
         
 

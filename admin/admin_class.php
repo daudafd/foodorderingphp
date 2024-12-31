@@ -267,36 +267,131 @@ Class Action {
 	}
 	
 
-	function save_settings(){
-		extract($_POST);
-		$data = " name = '$name' ";
-		$data .= ", email = '$email' ";
-		$data .= ", contact = '$contact' ";
-		$data .= ", about_content = '".htmlentities(str_replace("'","&#x2019;",$about))."' ";
-		if ($_FILES['img']['tmp_name'] != '') {
-			$fname = strtotime(date('y-m-d H:i')).'_'.$_FILES['img']['name'];
-			$move = move_uploaded_file($_FILES['img']['tmp_name'], '../assets/img/'. $fname);
-			$data .= ", cover_img = '$fname' ";
-		}
-		
-		$chk = $this->db->query("SELECT * FROM system_settings");
-		if ($chk->num_rows > 0) {
-			$save = $this->db->query("UPDATE system_settings SET ".$data." WHERE id =".$chk->fetch_array()['id']);
-		} else {
-			$save = $this->db->query("INSERT INTO system_settings SET ".$data);
+	function save_settings() {
+		$system_settings_id = null;
+	
+		$chk = $this->db->query("SELECT id FROM system_settings LIMIT 1");
+		if ($chk && $chk->num_rows > 0) {
+			$row = $chk->fetch_assoc();
+			$system_settings_id = $row['id'];
 		}
 	
-		if ($save) {
-			// Update session variables
-			$query = $this->db->query("SELECT * FROM system_settings LIMIT 1")->fetch_array();
-			foreach ($query as $key => $value) {
-				if (!is_numeric($key)) {
-					$_SESSION['setting_'.$key] = $value;
+		// Update System Settings (Conditionally)
+		$update_fields = [];
+		$bind_params = "";
+		$bind_values = [];
+	
+		if (isset($_POST['name'])) {
+			$update_fields[] = "name = ?";
+			$bind_params .= "s";
+			$bind_values[] = $_POST['name'];
+		}
+		if (isset($_POST['email'])) {
+			$update_fields[] = "email = ?";
+			$bind_params .= "s";
+			$bind_values[] = $_POST['email'];
+		}
+		if (isset($_POST['contact'])) {
+			$update_fields[] = "contact = ?";
+			$bind_params .= "s";
+			$bind_values[] = $_POST['contact'];
+		}
+		if (isset($_POST['about'])) {
+			$update_fields[] = "about_content = ?";
+			$bind_params .= "s";
+			$bind_values[] = $_POST['about'];
+		}
+	
+		if (!empty($update_fields) && $system_settings_id) { // Only update if there are fields to update AND the system settings ID exists
+			$update_query = "UPDATE system_settings SET " . implode(", ", $update_fields) . " WHERE id = ?";
+			$bind_params .= "i";
+			$bind_values[] = $system_settings_id;
+	
+			$stmt = $this->db->prepare($update_query);
+			if (!$stmt) {
+				error_log("Prepare failed: " . $this->db->error);
+				return json_encode(['error' => "Database error."]);
+			}
+	
+			$stmt->bind_param($bind_params, ...$bind_values);
+	
+			if (!$stmt->execute()) {
+				error_log("Execute failed: " . $stmt->error);
+				return json_encode(['error' => "Failed to update settings."]);
+			}
+			$stmt->close();
+		} else if (empty($system_settings_id) && (isset($_POST['name']) || isset($_POST['email']) || isset($_POST['contact']) || isset($_POST['about']))){
+			$stmt = $this->db->prepare("INSERT INTO system_settings (name, email, contact, about_content) VALUES (?, ?, ?, ?)"); // Removed cover_img from here
+			if (!$stmt) {
+				error_log("Prepare failed: " . $this->db->error);
+				return json_encode(['error' => "Database error."]);
+			}
+			$stmt->bind_param("ssss", $name, $email, $contact, $about);
+	
+			if (!$stmt->execute()) {
+				error_log("Execute failed: " . $stmt->error);
+				return json_encode(['error' => "Failed to insert settings."]);
+			}
+			$stmt->close();
+			$system_settings_id = $this->db->insert_id;
+		}
+	
+		// Handle Multiple Image Uploads (Conditionally)
+		if (isset($_FILES['images']) && is_array($_FILES['images']['tmp_name']) && $system_settings_id) {
+			//Delete Existing Banner Images
+			$del_banners = $this->db->query("DELETE FROM banner_images where system_settings_id = ".$system_settings_id);
+			$files = $_FILES['images'];
+	
+			for ($i = 0; $i < count($files['tmp_name']); $i++) {
+				if (!empty($files['tmp_name'][$i])) {
+					// ... (Image upload and database insert logic as before)
+					$fname = strtotime(date('y-m-d H:i')) . '_' . $files['name'][$i];
+					$target_dir = '../assets/img/';
+					$target_file = $target_dir . $fname;
+					$imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+	
+					$check = getimagesize($files["tmp_name"][$i]);
+					if ($check === false) {
+						return json_encode(['error' => "File is not an image."]);
+					}
+	
+					if ($files["size"][$i] > 5000000) { // Increased to 5MB
+						return json_encode(['error' => "Sorry, one of your files is too large. Max 5MB allowed."]);
+					}
+	
+					if (!in_array($imageFileType, ["jpg", "jpeg", "png", "gif"])) {
+						return json_encode(['error' => "Sorry, only JPG, JPEG, PNG & GIF files are allowed."]);
+					}
+	
+					if (move_uploaded_file($files['tmp_name'][$i], $target_file)) {
+						// Insert image path into banner_images table
+						$stmt = $this->db->prepare("INSERT INTO banner_images (system_settings_id, image_path) VALUES (?, ?)");
+						$stmt->bind_param("is", $system_settings_id, $fname);
+						if (!$stmt->execute()) {
+							error_log("Failed to insert banner image: " . $stmt->error);
+							return json_encode(['error' => "Failed to save banner images."]);
+						}
+						$stmt->close();
+					} else {
+						return json_encode(['error' => "Failed to upload one or more images."]);
+					}
 				}
 			}
-			return 1;
 		}
-	}	
+	
+			// Update session variables
+			$query = $this->db->query("SELECT * FROM system_settings LIMIT 1");
+			if ($query && $query->num_rows>0) {
+			  $query = $query->fetch_array();
+			  foreach ($query as $key => $value) {
+				  if (!is_numeric($key)) {
+					  $_SESSION['setting_'.$key] = $value;
+				  }
+			  }
+			}
+	
+		return json_encode(['success' => 'Settings saved successfully']);
+	}
 
 	
 	function save_category(){

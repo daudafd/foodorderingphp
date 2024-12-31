@@ -1,8 +1,26 @@
- 		<meta charset="utf-8" />
+<?php
+
+session_start();
+include('admin/db_connect.php');
+
+// Get system settings (you probably still need this)
+$qry = $conn->query("SELECT * FROM system_settings LIMIT 1");
+$meta = [];
+if ($qry->num_rows > 0) {
+    foreach ($qry->fetch_array() as $k => $val) {
+        $meta[$k] = $val;
+    }
+     // Check if name exists and assign it to the session
+     if (isset($meta['name'])) {
+      $setting_name = $meta['name'];
+  }
+}
+?> 		
+        <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title><?php echo $_SESSION['setting_name'] ?></title>
+        <title><?php echo $setting_name; ?></title>
         <!-- Favicon-->
         <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" />
         <!-- Font Awesome icons (free version)-->

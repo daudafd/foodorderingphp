@@ -1,22 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-    <?php
-    session_start();
-    include('header.php');
-    include('admin/db_connect.php');
+<?php
+  include('header.php');
 
-	$query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
-	foreach ($query as $key => $value) {
-		if(!is_numeric($key))
-			$_SESSION['setting_'.$key] = $value;
-	}
-    ?>
+// Get banner images
+$banner_qry = $conn->query("SELECT image_path FROM banner_images");
+$banner_images = [];
+while ($banner_row = $banner_qry->fetch_assoc()) {
+    $banner_images[] = $banner_row['image_path'];
+}
+
+// Handle the case where there are no banner images
+if (empty($banner_images)) {
+    $banner_images = ['default-banner.jpg']; // Use a default image
+}
+
+// Option 1: Display a single random image (PHP)
+$random_banner = $banner_images[array_rand($banner_images)];
+
+// Option 2: Prepare image paths for JavaScript slideshow (PHP)
+$banner_images_json = json_encode($banner_images);
+  ?>
 
     <style>
     	header.masthead {
-		  background: url(assets/img/<?php echo $_SESSION['setting_cover_img'] ?>);
-		  background-repeat: no-repeat;
+      background: linear-gradient(to bottom, rgb(0 0 0 / 40%) 0%, rgb(245 242 240 / 45%) 100%), url(assets/img/<?php echo $random_banner; ?>);
+      background-repeat: no-repeat;
 		  background-size: cover;
+      transition: background-image 1s ease-in-out;
 		}
 
     #mainNav .navbar-brand,
@@ -42,7 +53,7 @@
       </div>
         <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3" style="background-color: #ea3b16;" id="mainNav">
             <div class="container">
-                <a class="navbar-brand js-scroll-trigger" href="./"><?php echo $_SESSION['setting_name'] ?></a>
+                <a class="navbar-brand js-scroll-trigger" href="./"><?php echo $setting_name; ?></a>
                 <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav ml-auto my-2 my-lg-0">

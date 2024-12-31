@@ -8,6 +8,10 @@ if ($qry->num_rows > 0) {
     }
 }
 ?>
+
+<!-- Place the first <script> tag in your HTML's <head> -->
+<script src="https://cdn.tiny.cloud/1/ecyyq21wg06c2ehp31r1s9f8v321oud9uvirqx8enqpffv7o/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+
 <div class="container-fluid">
     <!-- !PAGE CONTENT! -->
     <div class="w3-main" style="margin-left:300px;margin-top:43px;">
@@ -17,7 +21,7 @@ if ($qry->num_rows > 0) {
 
         <div class="card col-lg-12">
             <div class="card-body">
-                <form action="" id="manage-settings">
+                <form action="" id="manage-settings" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="name" class="control-label">System Name</label>
                         <input type="text" class="form-control" id="name" name="name" value="<?php echo isset($meta['name']) ? $meta['name'] : '' ?>" required>
@@ -36,7 +40,7 @@ if ($qry->num_rows > 0) {
                     </div>
                     <div class="form-group">
                         <label for="" class="control-label">Image</label>
-                        <input type="file" class="form-control" name="img" onchange="displayImg(this, $(this))">
+                        <input type="file" class="form-control" name="images[]" multiple onchange="displayImg(this, $(this))">
                     </div>
                     <div class="form-group">
                         <img src="<?php echo isset($meta['cover_img']) ? '../assets/img/'.$meta['cover_img'] :'' ?>" alt="" id="cimg">
@@ -54,23 +58,28 @@ if ($qry->num_rows > 0) {
             }
         </style>
 
-        <script>
-            function displayImg(input, _this) {
-                if (input.files && input.files[0]) {
-                    var reader = new FileReader();
-                    reader.onload = function (e) {
-                        $('#cimg').attr('src', e.target.result);
-                    }
-                    reader.readAsDataURL(input.files[0]);
-                }
+    <script>
+    function displayImg(input, _this) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#cimg').attr('src', e.target.result);
             }
+            reader.readAsDataURL(input.files[0]);
+            }    
+        }        
 
-			$(document).ready(function() {
-    $('.text-jqte').jqte();
-});
+	// $(document).ready(function() {
+    //     $('.text-jqte').jqte();
+    // });
 
+    tinymce.init({
+    selector: 'textarea.text-jqte', // Select the textarea by class
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+    });
 
-            $('#manage-settings').submit(function(e){
+    $('#manage-settings').submit(function(e){
                 e.preventDefault();
                 start_load();
                 $.ajax({
@@ -84,18 +93,20 @@ if ($qry->num_rows > 0) {
                     error: function(err){
                         console.log(err);
                     },
-                    success: function(resp){
-                        if (resp == 1) {
-                            alert_toast('Data successfully saved.', 'success');
-                            setTimeout(function(){
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            alert_toast('Failed to save settings.', 'error');
-                        }
+                    success: function(resp) {
+                    resp = JSON.parse(resp) // Parse the JSON response
+                    if (resp.success) {
+                        alert_toast(resp.success, 'success'); // Access resp.success
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else if (resp.error) {
+                        alert_toast(resp.error, 'error'); // Access resp.error
                     }
+                }
                 });
-            });
+            });        
+
         </script>
     </div>
 </div>

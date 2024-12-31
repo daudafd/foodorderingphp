@@ -34,12 +34,10 @@
             <div class="container h-100">
                 <div class="row h-100 align-items-center justify-content-center text-center">
                     <div class="col-lg-10 align-self-end mb-4 page-title">
-                    	<!-- <h3 class="text-white">Welcome to <?php echo $_SESSION['setting_name']; ?></h3>
-                        <hr class="divider my-4" /> -->
+                    	<h3 class="text-white">Welcome to <?php echo $setting_name; ?></h3>
+                        <hr class="divider my-4" />
                         <a class="btn btn-primary btn-xl js-scroll-trigger" href="#menu">Order Now</a>
-
                     </div>
-                    
                 </div>
             </div>
         </header>
@@ -69,8 +67,20 @@
     </section>
     <script>
         
-        $('.view_prod').click(function(){
-            uni_modal_right('Product','view_prod.php?id='+$(this).attr('data-id'))
-        })
-    </script>
+      $('.view_prod').click(function(){
+        uni_modal_right('Product','view_prod.php?id='+$(this).attr('data-id'))
+      })
+
+    const images = <?php echo $banner_images_json; ?>; // Get images from PHP
+    let currentImageIndex = 0;
+    const header = document.querySelector('header.masthead');
+
+    function changeBackground() {
+        header.style.backgroundImage = `linear-gradient(to bottom, rgb(0 0 0 / 40%) 0%, rgb(245 242 240 / 45%) 100%), url(assets/img/${images[currentImageIndex]})`;
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+    }
+
+    changeBackground(); // Set initial background
+    setInterval(changeBackground, 5000); // Change every 5 seconds
+</script>
 	
