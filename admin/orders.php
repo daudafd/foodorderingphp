@@ -15,6 +15,7 @@
                                 <th>Address</th>
                                 <th>Mobile</th>
                                 <th>Time</th>
+                                <th>Payment Type</th>
                                 <th>Status</th>
                                 <th></th>
                             </tr>
@@ -32,6 +33,7 @@
                                     <td><?php echo $row['address'] ?></td>
                                     <td><?php echo $row['mobile'] ?></td>
                                     <td><?php echo $row['created_at'] ?></td>
+                                    <td><?php echo $row['transaction_reference'] ?></td>
                                     <?php if ($row['payment_status'] == 0) : ?>
                                         <td class="text-center"><span class="badge bg-secondary">For Verification</span></td>
                                     <?php else : ?>
