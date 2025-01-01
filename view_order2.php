@@ -11,7 +11,7 @@
             <?php 
             $total = 0;
             $delivery_charge = 0;
-            include 'db_connect.php';
+            include 'admin/db_connect.php';
 
             // Fetch delivery charge from the orders table
             $order_id = $_GET['id'];
@@ -48,7 +48,6 @@
         </tfoot>
     </table>
     <div class="text-center">
-        <button class="btn btn-primary" id="confirm" type="button" onclick="confirm_order()">Confirm</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
     </div>
 </div>

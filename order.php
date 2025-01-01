@@ -66,7 +66,7 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-primary view_order" data-id="<?php echo $row['id']; ?>">View Order</button>
+                                <button class="btn btn-sm btn-primary view_order2" data-id="<?php echo $row['id']; ?>">View Order</button>
                             </td>
                         </tr>
                     <?php endwhile; else: ?>
@@ -81,29 +81,60 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Order details will be loaded here -->
+                <div id="order-details"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.1.8/af-2.7.0/b-3.2.0/b-colvis-3.2.0/date-1.5.4/r-3.0.3/sc-2.4.3/sb-1.8.1/datatables.min.css" rel="stylesheet">
 <script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.1.8/af-2.7.0/b-3.2.0/b-colvis-3.2.0/date-1.5.4/r-3.0.3/sc-2.4.3/sb-1.8.1/datatables.min.js"></script>
 <script>
-    $(document).ready(function() {
-        // Only initialize DataTable if there are rows in the table
-        if ($('#order-table tbody tr').length > 0) {
-            $('#order-table').DataTable({
-                "order": [[4, "desc"]], // Default sorting by order status (latest first)
-                "columnDefs": [
-                    { "targets": [5], "orderable": false } // Disable sorting on the last column
-                ],
-                "language": {
-                    "emptyTable": "No orders available",  // This message will show if the table has no rows
-                    "zeroRecords": "No matching records found" // This message is shown if no records match the filter/search
-                }
-            });
-        } else {
-            // If there are no orders, hide the table and show the message
-            $('#order-table').closest('.table-responsive').html('<div class="alert alert-info">No orders found.</div>');
-        }
+$(document).ready(function() {
+    // Initialize DataTable if there are rows
+    if ($('#order-table tbody tr').length > 0) {
+        $('#order-table').DataTable({
+            "order": [[4, "desc"]], // Default sorting by order status (latest first)
+            "columnDefs": [
+                { "targets": [5], "orderable": false } // Disable sorting on the last column
+            ],
+            "language": {
+                "emptyTable": "No orders available",  // This message will show if the table has no rows
+                "zeroRecords": "No matching records found" // This message is shown if no records match the filter/search
+            }
+        });
+    } else {
+        // If no orders, show message instead of table
+        $('#order-table').closest('.table-responsive').html('<div class="alert alert-info">No orders found.</div>');
+    }
 
-        $('.view_order').click(function() {
-            uni_modal('Order', 'view_order2.php?id=' + $(this).attr('data-id'));
+    // Trigger modal when "View Order" button is clicked
+    $('.view_order2').click(function() {
+        const orderId = $(this).attr('data-id');
+        $.ajax({
+            url: 'view_order2.php',
+            type: 'GET',
+            data: { id: orderId },
+            success: function(response) {
+                $('#order-details').html(response); // Load the order details into the modal
+                $('#orderModal').modal('show'); // Show the modal
+            },
+            error: function() {
+                alert("Error loading order details.");
+            }
         });
     });
+});
+
 </script>
